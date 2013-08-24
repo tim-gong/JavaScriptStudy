@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <script src="jquery-1.8.3.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(function () {
+            // testBetween();
+            var result = range(3, 6);
+            alert(result);
+        });
+
+        // 遍历数组对元素执行一个操作
+        function foreach(array, action) {
+            for (var i = 0; i < array.length; i++) {
+                action(array[i]);
+            }
+        }
+
+        // 使用 foreach 函数汇总数组
+        function sum(numbers) {
+            var total = 0;
+            foreach(numbers, function (number) {
+                total += number;
+            });
+            return total;
+        }
+
+        //        function negate(func) {
+        //            return function (x) {
+        //                return !func(x);
+        //            };
+        //        }
+
+        function negate(func) {
+            return function () {
+                return !func.apply(null, arguments);
+            };
+        }
+
+        var isNotNaN = negate(isNaN);
+        // alert(isNotNaN(NaN));
+
+
+        /*归约函数*/
+        function reduce(combine, base, array) {
+            foreach(array, function (element) {
+                base = combine(base, element);
+            });
+            return base;
+        }
+
+        function add(a, b) {
+            return a + b;
+        }
+
+        function sum(numbers) {
+            return reduce(add, 0, numbers);
+        }
+
+        function foreach(array, action) {
+            for (var i = 0; i < array.length; i++) {
+                action(array[i]);
+            }
+        }
+
+        // 计算数组中0的个数
+        function countZeroes(array) {
+            function counter(total, element) {
+                return total + (element === 0 ? 1 : 0);
+            }
+
+            return reduce(counter, 0, array);
+        }
+
+        var numbers = [0, 1, 2, 3, 4, 5, 6, 7, 0, 0, 8, 0];
+        $(function () {
+            alert(countZeroes(numbers));
+        });
+
+    </script>
+</head>
+<body>
+
+</body>
+</html>

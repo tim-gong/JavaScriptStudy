@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <script src="jquery-1.8.3.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        function lastElement(array) {
+            if (array.length > 0) {
+                return array[array.length - 1];
+            } else {
+                throw "Cannot take the last element of an empty array.";
+            }
+        }
+
+        function lastElementPlusTen(array) {
+            return lastElement(array) * 10;
+        }
+
+        //$(function () {
+        //    try {
+        //        alert(lastElementPlusTen([]));
+        //    } catch (error) {
+        //        alert("Something went wrong:" + error);
+        //    }
+        //});
+
+        var currentThing = null;
+        function processThing(thing) {
+            var prevThing = currentThing;
+            currentThing = thing;
+            try {
+                /*做复杂的处理*/
+            } finally {
+                currentThing = prevThing;
+            }
+        }
+
+        function between(string, start, end) {
+            var startAt = string.indexOf(start) + start.length;
+            var endAt = string.indexOf(end, startAt);
+            return string.slice(startAt, endAt);
+        }
+
+        function testBetween() {
+            function assert(name, x) {
+                if (!x) {
+                    throw "Assertion failed: " + name;
+                }
+            }
+
+            assert("identical delimiters", between("a|b|c", "|", "|") == "b");
+            assert("whole string", between("[[n]]", "[[", "]]") == "n");
+            assert("reversed", between("]x[", "[", "]") == (undefined | ""));
+            assert("missing end", between("-->d", "-->", "<--") == (undefined | ""));
+        }
+    </script>
+</head>
+<body>
+</body>
+</html>

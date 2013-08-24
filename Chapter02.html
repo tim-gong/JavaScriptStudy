@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <script src="jquery-1.8.3.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var today = new Date();
+            var pLabel = $("p").first();
+            pLabel.append("year:" + today.getFullYear() + " month:" + today.getMonth() + " date:" + today.getDate());
+            pLabel.append("<br/> Day of week:" + today.getDay());
+            pLabel.append("<br/> TimeZoneOffset:" + today.getTimezoneOffset());
+            var strValue = "abcdefg";
+            pLabel.append("<br/>" + strValue.slice(2, 5));
+        });
+    </script>
+    <script type="text/javascript">
+        function createFunction() {
+            var local = 100;
+            return function () {
+                return local;
+            }
+        }
+
+        var returnFunc = createFunction();
+
+        function makeAdder(amount) {
+            return function (number) {
+                return number + amount;
+            };
+        }
+
+        var addTwo = makeAdder(2);
+
+        function multiplyAbsolute(number, factor) {
+            function multiply(number) {
+                return number * factor;
+            }
+
+            if (number < 0) {
+                return multiply(-number);
+            }
+            else {
+                return multiply(number);
+            }
+        }
+
+        // 幂函数
+        function power(base, exponent) {
+            var result = 1;
+            if (exponent === undefined) {
+                exponent = 2;
+            }
+            for (var count = 0; count < exponent; count++) {
+                result *= base;
+            }
+            return result;
+        }
+
+        function zeroPad(number, width) {
+            var string = String(Math.round(number));
+            while (string.length < width) {
+                string = "0" + string;
+            }
+            return string;
+        }
+
+        function findSequence(goal) {
+            function find(start, history) {
+                if (start == goal) {
+                    return history;
+                }
+                else if (start > goal) {
+                    return null;
+                }
+                else {
+                    return find(start + 5, "(" + history + " + 5)") || find(start * 3, "(" + history + " * 3)");
+                }
+            }
+
+            return find(1, "1");
+        }
+
+        var result = findSequence(13);
+        /*
+         var result = findSequence(13);
+         if (result === undefined || result === null) {
+         alert("无匹配的计算表达式");
+         }
+         else
+         alert(result);
+         */
+
+        /*
+         var cat = {color:"gray", name:"Spot", size:46};
+         cat.size=47;
+         alert(cat.size);
+         delete cat.size;
+         alert(cat.size);
+         */
+    </script>
+</head>
+<body>
+<p>
+
+</p>
+</body>
+</html>

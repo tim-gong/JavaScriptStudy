@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title></title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<script src="jquery-1.8.3.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+function GetText(filePath) {
+    var ForReading = 1;
+    var fso = new ActiveXObject("Scripting.FileSystemObject");
+    var f = fso.OpenTextFile(filePath, ForReading);
+    return(f.ReadAll());
+}
+$(function () {
+    var text = GetText("D:/Tim/WebstormProjects/JavaScriptStudy/TheBookOfProgramming.txt");
+    var htmlContent = renderFile(text, "测试标题");
+    var iframe1 = document.frames["iframe1"];
+    iframe1.src = function () {
+        var subDocument = iframe1.document;
+        subDocument.open();
+        subDocument.write(htmlContent);
+        subDocument.close();
+    }();
+});
+// 处理段落
+function processParagraph(paragraph) {
+    var header = 0;
+    while (paragraph.charAt(header) == "%") {
+        header++;
+    }
+    if (header > 0) {
+        return { type: "h" + header, content: splitParagraph(paragraph.slice(header + 1)) };
+    } else {
+        return { type: "p", content: splitParagraph(paragraph) };
+    }
+}
+
+// 分割段落(递归)
+function splitParagraphOld(text) {
+    function split(pos) {
+        if (pos == text.length) {
+            return [];
+        }
+        else if (text.charAt(pos) == "*") {
+            var end = findClosing("*", pos + 1),
+                    frag = { type: "emphasized", content: text.slice(pos + 1, end) };
+            return [frag].concat(split(end + 1));
+        }
+        else if (text.charAt(pos) == "{") {
+            var end = findClosing("}", pos + 1),
+                    frag = { type: "footnote", content: text.slice(pos + 1, end) };
+            return [frag].concat(split(end + 1));
+        } else {
+            var end = findOpeningOrEnd(pos),
+                    frag = { type: "normal", content: text.slice(pos, end) };
+            return [frag].concat(split(end));
+        }
+    }
+
+    function findClosing(character, from) {
+        var end = text.indexOf(character, from);
+        if (end == -1) throw new Error("Missing closing '" + character + "'");
+        else return end;
+    }
+
+    function findOpeningOrEnd(from) {
+        function indexOrEnd(character) {
+            var index = text.indexOf(character, from);
+            return index == -1 ? text.length : index;
+        }
+
+        return Math.min(indexOrEnd("*"), indexOrEnd("{"));
+    }
+
+    return split(0);
+}
+
+// 分割段落(更好的形式，while 循环，非递归)
+function splitParagraph(text) {
+    var pos = 0, fragments = [];
+    while (pos < text.length) {
+        if (text.charAt(pos) == ("*")) {
+            var end = findClosing("*", pos + 1);
+            fragments.push({ type: "emphasized", content: text.slice(pos + 1, end) });
+            pos = end + 1;
+        }
+        else if (text.charAt(pos) == "{") {
+            var end = findClosing("}", pos + 1);
+            fragments.push({ type: "footnote", content: text.slice(pos + 1, end) });
+            pos = end + 1;
+        } else {
+            var end = findOpeningOrEnd(pos);
+            fragments.push({ type: "normal", content: text.slice(pos, end) });
+            pos = end;
+        }
+    }
+
+    function findClosing(character, from) {
+        var end = text.indexOf(character, from);
+        if (end == -1) throw new Error("Missing closing '" + character + "'");
+        else return end;
+    }
+
+    function findOpeningOrEnd(from) {
+        function indexOrEnd(character) {
+            var index = text.indexOf(character, from);
+            return index == -1 ? text.length : index;
+        }
+
+        return Math.min(indexOrEnd("*"), indexOrEnd("{"));
+    }
+
+    return fragments;
+}
+
+// 抽取脚注
+function extractFootnotes(paragraphs) {
+    var footnotes = [];
+    var currentNote = 0;
+
+    function replaceFootnote(fragment) {
+        if (fragment.type == "footnote") {
+            currentNote++;
+            footnotes.push(fragment);
+            fragment.number = currentNote;
+            return { type: "reference", number: currentNote };
+        } else {
+            return fragment;
+        }
+    }
+
+    foreach(paragraphs, function (paragraph) {
+        paragraph.content = map(replaceFootnote, paragraph.content);
+    });
+    return footnotes;
+}
+
+// 填充HTML元素
+function tag(name, content, attributes) {
+    return { name: name, attributes: attributes, content: content };
+}
+
+// 填充链接元素
+function link(target, text) {
+    return tag("a", [text], { href: target });
+}
+
+// 填充文档内容
+function htmlDoc(title, bodyContent) {
+    return tag("html", [tag("head", [tag("title", [title])]), tag("body", bodyContent)]);
+}
+
+// 替换转义字符
+function escapeHTML(text) {
+    var replacements = [
+        [/&/g, "&amp;"],
+        [/"/g, "&quot;"],
+        [/</g, "&lt;"],
+        ["/>/g", "&gt;"]
+    ];
+    foreach(replacements, function (replace) {
+        text = text.replace(replace[0], replace[1]);
+    });
+    return text;
+}
+
+// 渲染属性
+function renderAttributes(attributes) {
+    if (attributes == null) return "";
+    var result = [];
+    for (var name in attributes) {
+        result.push(" " + name + "=\"" + escapeHTML(attributes[name]) + "\"");
+    }
+    return result.join("");
+}
+
+// 渲染HTML文档
+function renderHTML(element) {
+    var pieces = [];
+
+    function render(element) {
+        // 文本节点
+        if (typeof element == "string") {
+            pieces.push(escapeHTML(element));
+        }
+        // 不带内容的标签
+        else if (!element.content || element.content.length == 0) {
+            pieces.push("<" + element.name + renderAttributes(element.attributes) + "/>");
+        }
+        // 带有内容的标签
+        else {
+            pieces.push("<" + element.name + renderAttributes(element.attributes) + ">");
+            foreach(element.content, render);
+            pieces.push("</" + element.name + ">");
+        }
+    }
+
+    render(element);
+    return pieces.join("");
+}
+
+// 渲染片段
+function renderFragment(fragment) {
+    var result = "";
+    if (fragment.type == "reference") {
+        result = tag("sup", [link("#footnote" + fragment.number, String(fragment.number))]);
+    } else if (fragment.type == "emphasised") {
+        result = tag("em", [fragment.content]);
+    }
+    else if (fragment.type == "normal") {
+        result = fragment.content;
+    }
+    return result;
+}
+
+// 渲染段落
+function renderParagraph(paragraph) {
+    return tag(paragraph.type, map(renderFragment, paragraph.content));
+}
+
+// 渲染脚注
+function renderFootnote(footnote) {
+    var anchor = tag("a", [], { name: "footnote" + footnote.number });
+    var number = "[" + footnote.number + "]";
+    return tag("p", [tag("small", [anchor, number, footnote.content])]);
+}
+
+// 渲染文件
+function renderFile(file, title) {
+    var paragraphs = map(processParagraph, file.split("\r\n\r\n"));
+    var footnotes = map(renderFootnote, extractFootnotes(paragraphs));
+    var body = map(renderParagraph, paragraphs).concat(footnotes);
+    return renderHTML(htmlDoc(title, body));
+}
+
+function map(func, array) {
+    var result = [];
+    foreach(array, function (element) {
+        result.push(func(element));
+    });
+    return result;
+}
+
+function foreach(array, action) {
+    for (var i = 0; i < array.length; i++) {
+        action(array[i]);
+    }
+}
+</script>
+</head>
+<body>
+<iframe name="iframe1" src="" style="width: 100%;height: 100%;"></iframe>
+<div id="divFormatText">
+
+</div>
+</body>
+</html>
