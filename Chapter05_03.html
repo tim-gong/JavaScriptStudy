@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <script src="jquery-1.8.3.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        var op = {
+            "+": function (a, b) {
+                return a + b;
+            },
+            "==": function (a, b) {
+                return a == b;
+            },
+            "===": function (a, b) {
+                return a === b;
+            },
+            "!": function (a) {
+                return !a;
+            }
+        };
+        /*归约函数*/
+        function reduce(combine, base, array) {
+            foreach(array, function (element) {
+                base = combine(base, element);
+            });
+            return base;
+        }
+        function foreach(array, action) {
+            for (var i = 0; i < array.length; i++) {
+                action(array[i]);
+            }
+        }
+
+        function partial(func) {
+            var knownArgs = arguments;
+            return function () {
+                var realArgs = [];
+                for (var i = 0; i < knownArgs.length; i++) {
+                    realArgs.push(knownArgs[i]);
+                }
+                for (var i = 0; i < arguments.length; i++) {
+                    realArgs.push(arguments[i]);
+                }
+            }
+        }
+        alert(reduce(op["+"], 0, [1, 2, 3, 4, 5]));
+    </script>
+</head>
+<body>
+
+</body>
+</html>
